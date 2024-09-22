@@ -1,6 +1,12 @@
 import unittest
 
-from utils import split_nodes_delimiter, extract_markdown_images, extract_markdown_links
+from utils import (
+  split_nodes_delimiter,
+  extract_markdown_images,
+  extract_markdown_links,
+  split_nodes_image,
+  split_nodes_link,
+)
 from textnode import TextNode
 
 
@@ -76,3 +82,49 @@ class TestTextNode(unittest.TestCase):
     def test_extract_markdown_links_no_links(self):
         text = "some other text in the middle"
         self.assertEqual(extract_markdown_links(text), [])
+
+    def test_split_nodes_image(self):
+        node = TextNode("This is text with an ![image](https://www.google.com)", "text")
+        new_nodes = split_nodes_image([node])
+        self.assertEqual(new_nodes, [
+            TextNode("This is text with an ", "text"),
+            TextNode("image", "image", "https://www.google.com"),
+        ])
+
+    def test_split_nodes_image_multiple(self):
+        node = TextNode("This is text with an ![image](https://www.google.com) and another ![image](https://www.google.ca)", "text")
+        new_nodes = split_nodes_image([node])
+        self.assertEqual(new_nodes, [
+            TextNode("This is text with an ", "text"),
+            TextNode("image", "image", "https://www.google.com"),
+            TextNode(" and another ", "text"),
+            TextNode("image", "image", "https://www.google.ca"),
+        ])
+
+    def test_split_nodes_image_no_images(self):
+        node = TextNode("This is text with an image and another image", "text")
+        new_nodes = split_nodes_image([node])
+        self.assertEqual(new_nodes, [node])
+
+    def test_split_nodes_link(self):
+        node = TextNode("This is text with a [link](https://www.google.com)", "text")
+        new_nodes = split_nodes_link([node])
+        self.assertEqual(new_nodes, [
+            TextNode("This is text with a ", "text"),
+            TextNode("link", "link", "https://www.google.com"),
+        ])
+
+    def test_split_nodes_link_multiple(self):
+        node = TextNode("This is text with a [link](https://www.google.com) and another [link](https://www.google.ca)", "text")
+        new_nodes = split_nodes_link([node])
+        self.assertEqual(new_nodes, [
+            TextNode("This is text with a ", "text"),
+            TextNode("link", "link", "https://www.google.com"),
+            TextNode(" and another ", "text"),
+            TextNode("link", "link", "https://www.google.ca"),
+        ])
+
+    def test_split_nodes_link_no_links(self):
+        node = TextNode("This is text with a link and another link", "text")
+        new_nodes = split_nodes_link([node])
+        self.assertEqual(new_nodes, [node])
